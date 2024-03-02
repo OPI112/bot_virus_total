@@ -11,7 +11,7 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.reply_to(message,
-                 "Привет! Я бот, который сканирует файлы на вредоносное ПО. Просто отправь мне файл, и я скажу, безопасен ли он!")
+                 "Привет! Я бот, который сканирует файлы на вредоносное ПО. Просто отправь мне файл, и я скажу, безопасен ли он! Ограничение по размеру файлов: 20 мб")
 
 
 @bot.message_handler(content_types=['document'])
