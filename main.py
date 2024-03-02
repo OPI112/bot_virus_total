@@ -16,34 +16,39 @@ def handle_start(message):
 
 @bot.message_handler(content_types=['document'])
 def handle_file(message):
-    file_info = bot.get_file(message.document.file_id)
-    file_url = f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_info.file_path}"
-    file_response = requests.get(file_url)
-
-    params = {'apikey': VIRUSTOTAL_API_KEY}
-    files = {'file': file_response.content}
-    response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=params)
-
-    if response.status_code == 200:
-        result = response.json()
-        resource = result.get('resource')
-
-        # Получение результатов сканирования
-        params = {'apikey': VIRUSTOTAL_API_KEY, 'resource': resource}
-        response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params)
-
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        bot.reply_to(message,"Файл проверяется")
+        file_url = f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_info.file_path}"
+        file_response = requests.get(file_url)
+    
+        params = {'apikey': VIRUSTOTAL_API_KEY}
+        files = {'file': file_response.content}
+        response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=params)
+    
         if response.status_code == 200:
             result = response.json()
-            positives = result.get('positives')
-            total = result.get('total')
-            if positives is not None and positives > 0:
-                bot.reply_to(message, f"Файл обнаружен как вредоносный. Позитивные сканы: {positives}/{total}")
+            resource = result.get('resource')
+    
+            # Получение результатов сканирования
+            params = {'apikey': VIRUSTOTAL_API_KEY, 'resource': resource}
+            response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params)
+    
+            if response.status_code == 200:
+                result = response.json()
+                positives = result.get('positives')
+                total = result.get('total')
+                if positives is not None and positives > 0:
+                    bot.reply_to(message, f"Файл обнаружен как вредоносный. Позитивные сканы: {positives}/{total}")
+                else:
+                    bot.reply_to(message, "Файл не обнаружен как вредоносный.")
             else:
-                bot.reply_to(message, "Файл не обнаружен как вредоносный.")
+                bot.reply_to(message, "Произошла ошибка при получении результатов сканирования.")
         else:
-            bot.reply_to(message, "Произошла ошибка при получении результатов сканирования.")
-    else:
-        bot.reply_to(message, "Произошла ошибка при отправке файла на сканирование.")
+            bot.reply_to(message, "Произошла ошибка при отправке файла на сканирование.")
 
+    
+    except:
+        bot.reply_to(message, "Файл слишком большой")
 
 bot.polling()
